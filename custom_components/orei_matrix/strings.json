@@ -1,0 +1,16 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Orei HDMI Matrix Setup",
+        "description": "Configure your Orei HDMI Matrix connection.",
+        "data": {
+          "host": "Matrix IP Address",
+          "port": "Telnet Port (default 23)",
+          "sources": "Source names (inputs)",
+          "zones": "Zone names (outputs)"
+        }
+      }
+    }
+  }
+}

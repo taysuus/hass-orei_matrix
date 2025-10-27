@@ -1,0 +1,5 @@
+{
+  "name": "Orei Matrix",
+  "domains": ["media_player", "switch"],
+  "render_readme": true
+}

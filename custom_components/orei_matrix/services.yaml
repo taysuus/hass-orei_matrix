@@ -1,0 +1,3 @@
+refresh:
+  name: Refresh Matrix State
+  description: Manually refresh the Orei HDMI Matrix state from the device.
