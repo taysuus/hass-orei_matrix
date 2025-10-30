@@ -49,7 +49,7 @@ class OreiMatrixClient:
     # Core command handling
     # -----------------------
 
-    async def _send_command(self, cmd: str) -> str:
+    async def _send_command_multiple(self, cmd: str) -> list[str]:
         async with self._lock:
             await self._ensure_connected()
 
@@ -94,18 +94,20 @@ class OreiMatrixClient:
                         "Welcome" in line
                     ):
                         continue
-                    cleaned.append(line)
+                    cleaned.append(line.strip('>'))
 
-                # Pick the last remaining line
-                response = cleaned[-1] if cleaned else ""
-                _LOGGER.debug("Cleaned response: %s", response)
-
-                return response
+                return cleaned
 
             except Exception as e:
                 _LOGGER.warning("Telnet command failed (%s), reconnecting...", e)
                 await self.disconnect()
                 raise
+    
+    async def _send_command(self, cmd: str) -> str:
+        cleaned = await self._send_command_multiple(cmd);
+        response = cleaned[-1] if cleaned else ""
+        _LOGGER.debug("Cleaned response: %s", response)
+        return response
 
     # -----------------------
     # Matrix control commands
@@ -143,6 +145,30 @@ class OreiMatrixClient:
             return None
 
         return input_id
+
+    async def get_output_sources(self):
+        """Get the current input assigned to a given output."""
+        results = await self._send_command_multiple(f"r av out 0!")
+        response = {}
+
+        for res in results:
+            res = res.lower().replace("->", " -> ").replace(":", " ")
+            parts = res.split()
+            output_id = None
+            input_id = None
+
+            try:
+                for i, token in enumerate(parts):
+                    if token in ("output", "out") and i + 1 < len(parts):
+                        output_id = int(parts[i + 1])
+                    if token in ("input", "in") and i + 1 < len(parts):
+                        input_id = int(parts[i + 1])
+                response[output_id] = input_id
+            except ValueError:
+                _LOGGER.warning("Could not parse integers from response: %s", res)
+                return None
+        return response
+
 
     async def set_output_source(self, input_id: int, output_id: int):
         """Assign an input to an output."""

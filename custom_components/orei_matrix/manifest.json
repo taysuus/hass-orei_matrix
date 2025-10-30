@@ -1,7 +1,7 @@
 {
   "domain": "orei_matrix",
   "name": "Orei HDMI Matrix",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "integration_type": "device",
   "requirements": [],
   "documentation": "https://github.com/taysuus/hass-orei_matrix",

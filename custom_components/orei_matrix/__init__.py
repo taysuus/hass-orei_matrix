@@ -13,13 +13,13 @@ PLATFORMS = ["media_player", "switch"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     client = OreiMatrixClient(entry.data["host"], entry.data.get("port", 23))
+    type_str = await client.get_type()
 
     async def async_update_data():
         try:
-            await client.connect()
             power = await client.get_power()
-            type_str = await client.get_type()
-            return {"power": power, "type": type_str}
+            outputs = await client.get_output_sources()
+            return {"power": power, "type": type_str, "outputs": outputs}
         except Exception as err:
             _LOGGER.error("Update failed: %s", err)
             raise UpdateFailed(err)
