@@ -55,8 +55,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def handle_refresh_service(call: ServiceCall):
         """Handle manual refresh of all states."""
         await coordinator.async_request_refresh()
-        await hass.services.async_call("homeassistant", "update_entity", {"entity_id": "all"})
-        hass.bus.async_fire(f"{DOMAIN}_manual_refresh", {"entry_id": entry.entry_id})
 
     # Register the service
     hass.services.async_register(
