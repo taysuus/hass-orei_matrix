@@ -3,7 +3,7 @@ from homeassistant.core import callback
 from homeassistant.components.media_player.const import MediaPlayerEntityFeature
 from homeassistant.const import STATE_ON
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from .const import DOMAIN
+from .const import DOMAIN, CONF_CEC_ON_SOURCE_SELECT
 import logging
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +28,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class OreiMatrixOutputEntity(CoordinatorEntity, MediaPlayerEntity):
     """Represents one HDMI matrix output as a media player source selector."""
 
-    _attr_supported_features = MediaPlayerEntityFeature.SELECT_SOURCE
+    _attr_supported_features = MediaPlayerEntityFeature.SELECT_SOURCE \
+                                | MediaPlayerEntityFeature.TURN_OFF \
+                                | MediaPlayerEntityFeature.TURN_ON
 
     def __init__(self, client, coordinator, config, name, output_id, entry_id):
         super().__init__(coordinator)
@@ -52,6 +54,18 @@ class OreiMatrixOutputEntity(CoordinatorEntity, MediaPlayerEntity):
     def state(self):
         """Entity state is 'on' when matrix powered."""
         return STATE_ON if self.available else None
+
+    async def async_turn_on(self):
+        if not self.available:
+            return
+        src_id = self.coordinator.data.get("outputs")[self._output_id]
+        await self._client.set_cec_in(src_id, "on")
+
+    async def async_turn_off(self):
+        if not self.available:
+            return
+        src_id = self.coordinator.data.get("outputs")[self._output_id]
+        await self._client.set_cec_in(src_id, "off")
 
     @property
     def device_info(self):
@@ -85,5 +99,7 @@ class OreiMatrixOutputEntity(CoordinatorEntity, MediaPlayerEntity):
             return
         input_id = self._sources.index(source) + 1
         await self._client.set_output_source(input_id, self._output_id)
+        if bool(self._config.get(CONF_CEC_ON_SOURCE_SELECT)) and not await self._client.get_link_in(input_id):
+            await self._client.set_cec_in(input_id, "on")
         await self.coordinator.async_request_refresh()
         _LOGGER.info("Switched %s to %s", self.name, source)

@@ -169,6 +169,23 @@ class OreiMatrixClient:
                 return None
         return response
 
+    async def get_link_in(self, input_id: int):
+        """Get the input state."""
+        res = await self._send_command(f"r link in {input_id}!")
+        return "connect" in res.lower()
+
+    async def get_link_out(self, output_id: int):
+        """Get the output state."""
+        res = await self._send_command(f"r link out {output_id}!")
+        return "connect" in res.lower()
+
+    async def set_cec_in(self, input_id: int, command: str):
+        """Send a CEC command to the input."""
+        await self._send_command(f"s cec in {input_id} {command}!")
+
+    async def set_cec_out(self, output_id: int, command: str):
+        """Send a CEC command to the output."""
+        await self._send_command(f"s cec hdmi out {output_id} {command}!")
 
     async def set_output_source(self, input_id: int, output_id: int):
         """Assign an input to an output."""

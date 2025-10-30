@@ -2,7 +2,7 @@ from homeassistant import config_entries
 import voluptuous as vol
 from homeassistant.helpers.selector import selector
 
-from .const import DOMAIN
+from .const import DOMAIN, CONF_HOST, CONF_PORT, CONF_SOURCES, CONF_ZONES, CONF_CEC_ON_SOURCE_SELECT
 
 
 class OreiMatrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -18,16 +18,20 @@ class OreiMatrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         data_schema = vol.Schema({
-            vol.Required("host"): str,
-            vol.Optional("port", default=23): int,
+            vol.Required(CONF_HOST): str,
+            vol.Optional(CONF_PORT, default=23): int,
             vol.Optional(
-                "sources",
+                CONF_SOURCES,
                 default=[]
             ): selector({"text": {"multiple": True}}),
             vol.Optional(
-                "zones",
+                CONF_ZONES,
                 default=[]
             ): selector({"text": {"multiple": True}}),
+            vol.Optional(
+                CONF_CEC_ON_SOURCE_SELECT,
+                default=False
+            ): bool,
         })
 
         return self.async_show_form(
