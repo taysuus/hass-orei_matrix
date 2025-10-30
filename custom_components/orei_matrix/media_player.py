@@ -1,4 +1,5 @@
 from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.core import callback
 from homeassistant.components.media_player.const import MediaPlayerEntityFeature
 from homeassistant.const import STATE_ON
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -64,17 +65,15 @@ class OreiMatrixOutputEntity(CoordinatorEntity, MediaPlayerEntity):
             "model": model,
             "configuration_url": f"http://{self._config.get('host')}",
         }
-
-    async def async_update(self):
-        """Poll current input for this output if powered."""
+        
+    @callback
+    def _handle_coordinator_update(self):
         if not self.available:
             return
-        try:
-            src_id = await self._client.get_output_source(self._output_id)
-            if src_id and 1 <= src_id <= len(self._sources):
-                self._attr_source = self._sources[src_id - 1]
-        except Exception as e:
-            _LOGGER.error("Failed updating %s: %s", self.name, e)
+        src_id = self.coordinator.data.get("outputs")[self._output_id]
+        if src_id and 1 <= src_id <= len(self._sources):
+            self._attr_source = self._sources[src_id - 1]
+            self.async_write_ha_state()
 
     async def async_select_source(self, source):
         """Change active source for this output."""
@@ -86,5 +85,5 @@ class OreiMatrixOutputEntity(CoordinatorEntity, MediaPlayerEntity):
             return
         input_id = self._sources.index(source) + 1
         await self._client.set_output_source(input_id, self._output_id)
-        self._attr_source = source
+        await self.coordinator.async_request_refresh()
         _LOGGER.info("Switched %s to %s", self.name, source)
