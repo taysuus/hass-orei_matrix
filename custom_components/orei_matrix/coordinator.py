@@ -169,6 +169,63 @@ class OreiMatrixClient:
                 return None
         return response
 
+    async def get_in_link(self, input_id: int):
+        """Get the input state."""
+        res = await self._send_command(f"r link in {input_id}!")
+        return not "disconnect" in res.lower()
+
+    async def get_in_links(self):
+        """Get the input state."""
+        results = await self._send_command_multiple(f"r link in 0!")
+        response = {}
+
+        for res in results:
+            res = res.lower().replace(":", " ")
+            parts = res.split()
+            input_id = None
+
+            try:
+                for i, token in enumerate(parts):
+                    if token in ("input", "in") and i + 1 < len(parts):
+                        input_id = int(parts[i + 1])
+                response[input_id] = not "disconnect" in res
+            except ValueError:
+                _LOGGER.warning("Could not parse integers from response: %s", res)
+                return None
+        return response
+
+    async def get_out_link(self, output_id: int):
+        """Get the output state."""
+        res = await self._send_command(f"r link out {output_id}!")
+        return not "disconnect" in res.lower()
+
+    async def get_out_links(self):
+        """Get the input state."""
+        results = await self._send_command_multiple(f"r link out 0!")
+        response = {}
+
+        for res in results:
+            res = res.lower().replace(":", " ")
+            parts = res.split()
+            output_id = None
+
+            try:
+                for i, token in enumerate(parts):
+                    if token in ("output", "out") and i + 1 < len(parts):
+                        output_id = int(parts[i + 1])
+                response[output_id] = not "disconnect" in res
+            except ValueError:
+                _LOGGER.warning("Could not parse integers from response: %s", res)
+                return None
+        return response
+
+    async def set_cec_in(self, input_id: int, command: str):
+        """Send a CEC command to the input."""
+        await self._send_command(f"s cec in {input_id} {command}!")
+
+    async def set_cec_out(self, output_id: int, command: str):
+        """Send a CEC command to the output."""
+        await self._send_command(f"s cec hdmi out {output_id} {command}!")
 
     async def set_output_source(self, input_id: int, output_id: int):
         """Assign an input to an output."""

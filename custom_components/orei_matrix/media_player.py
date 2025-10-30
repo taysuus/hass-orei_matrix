@@ -1,7 +1,7 @@
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.core import callback
 from homeassistant.components.media_player.const import MediaPlayerEntityFeature
-from homeassistant.const import STATE_ON
+from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 import logging
@@ -28,7 +28,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class OreiMatrixOutputEntity(CoordinatorEntity, MediaPlayerEntity):
     """Represents one HDMI matrix output as a media player source selector."""
 
-    _attr_supported_features = MediaPlayerEntityFeature.SELECT_SOURCE
+    _attr_supported_features = MediaPlayerEntityFeature.SELECT_SOURCE \
+                                | MediaPlayerEntityFeature.TURN_OFF \
+                                | MediaPlayerEntityFeature.TURN_ON
 
     def __init__(self, client, coordinator, config, name, output_id, entry_id):
         super().__init__(coordinator)
@@ -51,7 +53,31 @@ class OreiMatrixOutputEntity(CoordinatorEntity, MediaPlayerEntity):
     @property
     def state(self):
         """Entity state is 'on' when matrix powered."""
-        return STATE_ON if self.available else None
+        outputs = self.coordinator.data.get("outputs")
+        in_links = self.coordinator.data.get("in_links")
+        if not self.available or not outputs or not in_links:
+            return None
+        return STATE_ON if bool(in_links[outputs[self._output_id]]) else STATE_OFF
+
+    async def async_turn_on(self):
+        if not self.available:
+            return
+        outputs = self.coordinator.data.get("outputs")
+        if not outputs:
+            return
+        src_id = outputs[self._output_id]
+        await self._client.set_cec_in(src_id, "on")
+        self.async_write_ha_state()
+
+    async def async_turn_off(self):
+        if not self.available:
+            return
+        outputs = self.coordinator.data.get("outputs")
+        if not outputs:
+            return
+        src_id = outputs[self._output_id]
+        await self._client.set_cec_in(src_id, "off")
+        self.async_write_ha_state()
 
     @property
     def device_info(self):
@@ -70,7 +96,10 @@ class OreiMatrixOutputEntity(CoordinatorEntity, MediaPlayerEntity):
     def _handle_coordinator_update(self):
         if not self.available:
             return
-        src_id = self.coordinator.data.get("outputs")[self._output_id]
+        outputs = self.coordinator.data.get("outputs")
+        if not outputs:
+            return
+        src_id = outputs[self._output_id]
         if src_id and 1 <= src_id <= len(self._sources):
             self._attr_source = self._sources[src_id - 1]
             self.async_write_ha_state()
