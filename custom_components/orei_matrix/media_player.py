@@ -14,18 +14,16 @@ async def async_setup_entry(hass, entry, async_add_entities):
     client = data["client"]
     coordinator = data["coordinator"]
     config = data["config"]
-
     zones = config.get("zones", [])
-
     entities = [
-        OreiMatrixOutputEntity(client, coordinator, config, zone_name, idx, entry.entry_id)
+        OreiMatrixOutputMediaPlayer(client, coordinator, config, zone_name, idx, entry.entry_id)
         for idx, zone_name in enumerate(zones, start=1)
     ]
 
     async_add_entities(entities)
 
 
-class OreiMatrixOutputEntity(CoordinatorEntity, MediaPlayerEntity):
+class OreiMatrixOutputMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     """Represents one HDMI matrix output as a media player source selector."""
 
     _attr_supported_features = MediaPlayerEntityFeature.SELECT_SOURCE \
@@ -53,11 +51,7 @@ class OreiMatrixOutputEntity(CoordinatorEntity, MediaPlayerEntity):
     @property
     def state(self):
         """Entity state is 'on' when matrix powered."""
-        outputs = self.coordinator.data.get("outputs")
-        in_links = self.coordinator.data.get("in_links")
-        if not self.available or not outputs or not in_links:
-            return None
-        return STATE_ON if bool(in_links[outputs[self._output_id]]) else STATE_OFF
+        return STATE_ON if self.available else STATE_OFF
 
     async def async_turn_on(self):
         if not self.available:

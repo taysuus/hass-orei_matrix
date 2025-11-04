@@ -9,7 +9,7 @@ from .coordinator import OreiMatrixClient
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["media_player", "switch"]
+PLATFORMS = ["media_player", "switch", "button"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     client = OreiMatrixClient(entry.data["host"], entry.data.get("port", 23))
@@ -19,14 +19,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         try:
             power = await client.get_power()
             outputs = await client.get_output_sources()
-            in_links = await client.get_in_links()
-            out_links = await client.get_out_links()
             return {
                 "power": power,
                 "type": type_str,
-                "outputs": outputs,
-                "in_links": in_links,
-                "out_links": out_links
+                "outputs": outputs
             }
         except Exception as err:
             _LOGGER.error("Update failed: %s", err)
