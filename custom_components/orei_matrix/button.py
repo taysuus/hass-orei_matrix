@@ -1,6 +1,5 @@
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import callback
-from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 import logging
