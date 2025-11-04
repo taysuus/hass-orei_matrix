@@ -64,7 +64,7 @@ class OreiMatrixOutputButton(CoordinatorEntity, ButtonEntity):
             _LOGGER.warning("Current input is unknown; cannot change source for %s.", self.name)
             return
         
-        input_id = ((self._current + 1) % len(self._sources)) + 1
+        input_id = (self._current % len(self._sources)) + 1
         source = self._sources[input_id - 1]
         await self._client.set_output_source(input_id, self._output_id)
         await self.coordinator.async_request_refresh()
