@@ -1,16 +1,17 @@
 import asyncio
 import logging
+from asyncio import StreamReader, StreamWriter
 
 _LOGGER = logging.getLogger(__name__)
 
 class OreiMatrixClient:
     """Async client for controlling Orei HDMI Matrix via Telnet."""
 
-    def __init__(self, host, port=23):
+    def __init__(self, host, port=23) -> None:
         self._host = host
         self._port = port
-        self._reader = None
-        self._writer = None
+        self._reader: StreamReader | None = None
+        self._writer: StreamWriter | None = None
         self._lock = asyncio.Lock()
 
     # -----------------------
@@ -53,6 +54,10 @@ class OreiMatrixClient:
         async with self._lock:
             await self._ensure_connected()
 
+            # Sanity check: _ensure_connected should have set these
+            if self._reader is None or self._writer is None:
+                raise RuntimeError("Connection not established")
+
             try:
                 _LOGGER.debug("Sending command: %s", cmd)
                 self._writer.write((cmd + "\r\n").encode("ascii"))
@@ -73,7 +78,7 @@ class OreiMatrixClient:
 
                 if not chunks:
                     _LOGGER.warning("No response received for command: %s", cmd)
-                    return ""
+                    return [""]
 
                 # --- Clean and parse ---
                 filtered = bytes(b for b in chunks if b < 0x80)
@@ -99,12 +104,12 @@ class OreiMatrixClient:
                 return cleaned
 
             except Exception as e:
-                _LOGGER.warning("Telnet command failed (%s), reconnecting...", e)
+                _LOGGER.warning("Telnet command failed (%s), reconnecting", e)
                 await self.disconnect()
                 raise
-    
+
     async def _send_command(self, cmd: str) -> str:
-        cleaned = await self._send_command_multiple(cmd);
+        cleaned = await self._send_command_multiple(cmd)
         response = cleaned[-1] if cleaned else ""
         _LOGGER.debug("Cleaned response: %s", response)
         return response

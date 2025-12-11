@@ -1,3 +1,4 @@
+from homeassistant.core import HomeAssistant
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
@@ -5,7 +6,7 @@ import logging
 
 _LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
     data = hass.data[DOMAIN][entry.entry_id]
     client = data["client"]
     coordinator = data["coordinator"]
@@ -17,7 +18,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class OreiMatrixPowerSwitch(CoordinatorEntity, SwitchEntity):
     """Switch for Orei HDMI Matrix power."""
 
-    def __init__(self, client, coordinator, config, entry_id):
+    def __init__(self, client, coordinator, config, entry_id) -> None:
         super().__init__(coordinator)
         self._client = client
         self._config = config

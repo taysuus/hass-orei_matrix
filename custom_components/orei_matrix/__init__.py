@@ -9,7 +9,7 @@ from .coordinator import OreiMatrixClient
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["media_player", "switch", "button"]
+PLATFORMS = ["button", "media_player", "select", "switch"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     client = OreiMatrixClient(entry.data["host"], entry.data.get("port", 23))
@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER,
         name="orei_matrix",
         update_method=async_update_data,
-        update_interval=timedelta(seconds=30),
+        update_interval=timedelta(seconds=30)
     )
 
     await coordinator.async_config_entry_first_refresh()

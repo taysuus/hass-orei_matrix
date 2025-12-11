@@ -1,6 +1,5 @@
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.core import callback
-from homeassistant.components.media_player.const import MediaPlayerEntityFeature
+from homeassistant.components.media_player import MediaPlayerEntity, MediaPlayerEntityFeature
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
@@ -8,7 +7,7 @@ import logging
 
 _LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
     """Set up Orei HDMI Matrix outputs as media players."""
     data = hass.data[DOMAIN][entry.entry_id]
     client = data["client"]
@@ -30,7 +29,7 @@ class OreiMatrixOutputMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
                                 | MediaPlayerEntityFeature.TURN_OFF \
                                 | MediaPlayerEntityFeature.TURN_ON
 
-    def __init__(self, client, coordinator, config, name, output_id, entry_id):
+    def __init__(self, client, coordinator, config, name, output_id, entry_id) -> None:
         super().__init__(coordinator)
         sources = config.get("sources", [])
         self._client = client
@@ -85,7 +84,7 @@ class OreiMatrixOutputMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             "model": model,
             "configuration_url": f"http://{self._config.get('host')}",
         }
-        
+
     @callback
     def _handle_coordinator_update(self):
         if not self.available:
@@ -101,7 +100,7 @@ class OreiMatrixOutputMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     async def async_select_source(self, source):
         """Change active source for this output."""
         if not self.available:
-            _LOGGER.warning("Matrix is off; cannot change source for %s.", self.name)
+            _LOGGER.warning("Matrix is off; cannot change source for %s", self.name)
             return
         if source not in self._sources:
             _LOGGER.warning("Unknown source %s for %s", source, self.name)
